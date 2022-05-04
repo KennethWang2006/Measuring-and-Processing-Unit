@@ -1,0 +1,108 @@
+import csv
+
+# We start by creating all of our variables.
+
+distance_data = []
+
+smoothing_values = []
+old_smoothed_value = 0.0
+old_time = 0.0
+AVERAGE_COUNT = 10
+
+#This is the name of the CSV file you are loading in to analyze.
+INPUT_DATA_FILE_NAME = 'analog_distance_calibration.csv'
+
+# This function does a linear map between two ordered pairs (x1,y1) and (x2,y2)
+def map(x, x1, x2, y1, y2):
+    return ((y2 - y1) / (x2 - x1) * (x - x1) + y1)
+
+
+def raw_sensor_to_distance(value):
+    # This is the calibration data you choose from the analog_distance_calibration CSV file.
+    # Adjust the values below to match the calibration you want to use. 
+    raw_value1 = 65312
+    distance_value1 = 5
+    raw_value2 = 47632
+    distance_value2 = 10
+    return map(value, raw_value1, raw_value2, distance_value1, distance_value2)
+
+
+def rate_of_change_calc(x1, y1, x2, y2):
+
+  # Here put a correct calculation for rate of change
+  return (y2 - y1) / (x2 - x1)
+
+
+with open(INPUT_DATA_FILE_NAME) as csv_file:
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    line_count = 0
+    # For each row in our data:
+    for row in csv_reader:
+        # We can store all of the information for each row in an list called output_data and write it to the distance_data once for each row.
+        output_data = []
+
+        # Add the current time to the output data:
+        current_time = float(row[0])
+        output_data.append(current_time)
+
+        # Read the raw light value as an integer
+        raw_sensor_value = float(row[1])
+        output_data.append(raw_sensor_value)
+        # Add this value to the output data:
+
+        # Here we use our calibration function to convert from raw data to distance
+        distance_value = raw_sensor_to_distance(raw_sensor_value)
+
+        # For the first four rows, simply fill up the smoothing_values array with the distance values.
+        # Since we don't have an average value yet, repeat the current distance in the list.
+
+        if (line_count < AVERAGE_COUNT):
+          smoothing_values.append(distance_value)
+          smoothed_distance_value = distance_value
+
+          output_data.append(distance_value)
+          output_data.append(smoothed_distance_value)
+          
+        # Otherwise calculate the average of these four values and the current one. Store it in the smoothed_data array together with the time.
+        else:
+          smoothed_distance_value = (sum(smoothing_values) + distance_value) / (len(smoothing_values)+1)
+
+          output_data.append(distance_value)
+          output_data.append(smoothed_distance_value)
+
+          #Once we've done this, we want to delete the first element of the smoothing values list and add in the current value to the end.
+          smoothing_values.pop(0)
+          smoothing_values.append(distance_value)
+
+
+          # The last thing we want to do is calculate the rate of change of distance and add it to the output.
+        
+        
+          # We need two points to calculate rate of change.
+        if(line_count == 0):
+          # For the first line of the data, we don't have two points. Let's just set the rate of change to be zero.
+          rate_of_change = 0
+        else:
+          # After the first line, we can use the old data (old_time,old_smoothed_value) and the current one (current_time,smoothed_distance_value) to calculate slope.
+          # The function above calculates this from these two values. Fix that function!
+          rate_of_change = rate_of_change_calc(old_time,old_smoothed_value,current_time,smoothed_distance_value)
+
+          # Add this value to our output_data list:
+        output_data.append(rate_of_change)
+        
+          # Add the entire output_data to the distance_data list:
+        distance_data.append(output_data)
+
+          # ...and update our variables that go between rows of the data.
+        old_time = current_time
+        old_smoothed_value = smoothed_distance_value
+        line_count += 1
+        
+    print(f'Processed {line_count} lines.')
+   
+# Now that we have processed the raw data, create a new CSV file that has the distance data in it
+f = open("full_output.csv", "w")
+f.write("t,raw_sensor_data,distance,distance_smoothed,rate_of_change\n")
+for row in distance_data:
+  f.write("{0},{1},{2},{3},{4}\n".format(row[0], row[1], row[2], row[3],row[4]))
+f.close()
