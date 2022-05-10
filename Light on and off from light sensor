@@ -1,0 +1,36 @@
+import time
+import board
+from analogio import AnalogIn
+from digitalio import DigitalInOut, Direction, Pull
+
+
+analog_in = AnalogIn(board.A1)
+Led = DigitalInOut(board.D7)
+Led.direction = Direction.OUTPUT
+
+
+THRESHOLD =  27000
+
+def get_lightvalue(pin):
+    return (pin.value )
+    
+def Digital_Out(value):
+    if (value > THRESHOLD):
+        return 1
+    else:
+        return 0
+        
+
+while True:
+    print((get_lightvalue(analog_in),))
+    Light = get_lightvalue(analog_in)
+    Threshold_value = Digital_Out(Light)
+    #print (Threshold_value)
+    if Threshold_value == 1:
+        Led.value  = True 
+    else:
+        Led.value = False
+    time.sleep(0.5)
+
+    
+    
