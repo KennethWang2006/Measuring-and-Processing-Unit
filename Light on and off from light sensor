@@ -9,7 +9,7 @@ Led = DigitalInOut(board.D7)
 Led.direction = Direction.OUTPUT
 
 
-THRESHOLD =  27000
+THRESHOLD =  34000
 
 def get_lightvalue(pin):
     return (pin.value )
@@ -22,7 +22,7 @@ def Digital_Out(value):
         
 
 while True:
-    print((get_lightvalue(analog_in),))
+    #print((get_lightvalue(analog_in),))
     Light = get_lightvalue(analog_in)
     Threshold_value = Digital_Out(Light)
     #print (Threshold_value)
@@ -30,7 +30,4 @@ while True:
         Led.value  = True 
     else:
         Led.value = False
-    time.sleep(0.5)
-
-    
-    
+    time.sleep(0.001)
