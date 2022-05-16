@@ -1,12 +1,18 @@
+
 import time
 import board
 from analogio import AnalogIn
-from analogio import AnalogOut
+from digitalio import DigitalInOut, Direction, Pull
+
 
 analog_in = AnalogIn(board.A1)
-analog_out = AnalogOut(board.A0)
+GreenLed = DigitalInOut(board.D7)
+RedLed = DigitalInOut(board.D6)
+GreenLed.direction = Direction.OUTPUT
+RedLed.direction = Direction.OUTPUT
 
-THRESHOLD =  27000
+THRESHOLD =  33800
+
 
 def get_lightvalue(pin):
     return (pin.value )
@@ -16,13 +22,21 @@ def Digital_Out(value):
         return 1
     else:
         return 0
-        
 
 while True:
     #print((get_lightvalue(analog_in),))
     Light = get_lightvalue(analog_in)
     Threshold_value = Digital_Out(Light)
-    print (Threshold_value)
-    time.sleep(0.1)
+    #print (Threshold_value)
+    if Threshold_value == 1:
+        RedLed.value = True
+        GreenLed.value  = False 
+        
+    else:
+        GreenLed.value = True
+        RedLed.value = False
+        
+    time.sleep(0.001)
     
+
     
