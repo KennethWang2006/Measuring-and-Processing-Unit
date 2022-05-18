@@ -3,10 +3,15 @@ import board
 import digitalio 
 
 from analogio import AnalogIn
+from digitalio import DigitalInOut, Direction, Pull
 
-inputPin = AnalogIn(board.A1)
+analog_in = AnalogIn(board.A1)
+GreenLed = DigitalInOut(board.D7)
+RedLed = DigitalInOut(board.D6)
+GreenLed.direction = Direction.OUTPUT
+RedLed.direction = Direction.OUTPUT
 
-THRESHOLD = 34000
+THRESHOLD = 33500
 DELAY_SECONDS = 0.001
 TOTAL_RECORD_TIME = 3.0
 elapsedTime = 0.0
@@ -14,9 +19,8 @@ oldTime = time.monotonic()
 data = []
 
 
-
-def readAnalogPin():
-    return inputPin.value
+def readAnalogPin(pin):
+    return pin.value
 
 def thresholdValue(value):
     if(value > THRESHOLD):
@@ -27,7 +31,7 @@ def thresholdValue(value):
 
 while (elapsedTime < TOTAL_RECORD_TIME):
     currentTime = time.monotonic()
-    pinValue = readAnalogPin()
+    pinValue = readAnalogPin(analog_in)
     recordValue = pinValue#thresholdValue(pinValue)
 
     #print("{0},{1}".format(elapsedTime, recordValue))
@@ -37,6 +41,32 @@ while (elapsedTime < TOTAL_RECORD_TIME):
     elapsedTime += currentTime - oldTime
     oldTime = currentTime
 
-    
+sound_data = []
+sound_count = 0
+old_sound_value = 0
+
+THRESHOLD = 33500
+
 for row in data:
-    print("{0},{1}".format(row[0], row[1]))
+  raw_sound_value = int(row[1])
+  
+  if(raw_sound_value > THRESHOLD):
+        current_sound_value = 1
+        sound_count += 1
+  else:
+        current_sound_value = 0
+
+  if sound_count < 1000:
+        RedLed.value = False
+        GreenLed.value = True
+  else:
+        RedLed.value = True
+        GreenLed.value = False
+    
+
+  #sound_data.append([row[0],sound_count])
+
+print(f'sound_count: {sound_count} lines.')
+
+#for row in sound_data:
+    #print("{0},{1}".format(row[0], row[1]))
